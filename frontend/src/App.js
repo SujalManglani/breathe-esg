@@ -46,7 +46,7 @@ function App() {
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-        "https://YOUR-RENDER-URL.onrender.com"
+        "https://breathe-esg-ly7s.onrender.com/api/records/?company_id=1"
       );
 
       setRecords(response.data);
@@ -59,7 +59,7 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        "https://YOUR-RENDER-URL.onrender.com/api/summary/"
+        "https://breathe-esg-ly7s.onrender.com/api/summary/"
       );
 
       setSummary(response.data);
@@ -86,7 +86,7 @@ function App() {
 
     try {
       await axios.post(
-        "https://YOUR-RENDER-URL.onrender.com/api/upload/",
+        "https://breathe-esg-ly7s.onrender.com/api/upload/",
         formData,
         {
           headers: {
@@ -113,7 +113,7 @@ function App() {
   ) => {
     try {
       await axios.post(
-        `https://YOUR-RENDER-URL.onrender.com/api/record/${recordId}/status/`,
+        `https://breathe-esg-ly7s.onrender.com/api/record/${recordId}/status/`,
         {
           status: newStatus,
           reviewer: "admin",
