@@ -229,15 +229,13 @@ function App() {
 
   return (
     <div
-      className="
-        min-h-screen
-        text-white
-        p-6 md:p-10
-        bg-gradient-to-br
-        from-slate-950
-        via-slate-900
-        to-blue-950
-      "
+
+   className="
+  min-h-screen
+  text-white
+  p-6 md:p-10
+  bg-black
+"
     >
       {/* Header */}
 
