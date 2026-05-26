@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-25ujw8)dego&1xb)e%vn2ff5t5jz2fg0xni@2@(-v2bo@heq_1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+]
 
 
 # Application definition
@@ -131,8 +135,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-ALLOWED_HOSTS = ["*"]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.vercel.app",
-]
