@@ -46,7 +46,7 @@ function App() {
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/records/"
+        "https://YOUR-RENDER-URL.onrender.com"
       );
 
       setRecords(response.data);
@@ -59,7 +59,7 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/summary/"
+        "https://YOUR-RENDER-URL.onrender.com/api/summary/"
       );
 
       setSummary(response.data);
@@ -86,7 +86,7 @@ function App() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
+        "https://YOUR-RENDER-URL.onrender.com/api/upload/",
         formData,
         {
           headers: {
@@ -113,7 +113,7 @@ function App() {
   ) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/record/${recordId}/status/`,
+        `https://YOUR-RENDER-URL.onrender.com/api/record/${recordId}/status/`,
         {
           status: newStatus,
           reviewer: "admin",
