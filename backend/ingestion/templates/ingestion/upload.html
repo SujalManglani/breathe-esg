@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>CSV Upload</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 30px;
+            border-radius: 20px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #3b82f6;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Upload CSV File</h1>
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+            <label for="company_id">
+                Company ID
+            </label>
+
+            <input
+                id="company_id"
+                type="text"
+                name="company_id"
+                placeholder="Enter company ID"
+            >
+
+            <label for="source_type">
+                Source Type
+            </label>
+
+            <select id="source_type" name="source_type">
+
+                <option value="SAP">
+                    SAP
+                </option>
+
+                <option value="UTILITY">
+                    UTILITY
+                </option>
+
+                <option value="TRAVEL">
+                    TRAVEL
+                </option>
+
+            </select>
+
+            <label for="file">
+                Select CSV File
+            </label>
+
+            <input
+                id="file"
+                type="file"
+                name="file"
+                accept=".csv"
+            >
+
+            <button type="submit">
+                Upload CSV
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+</html>

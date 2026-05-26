@@ -1,0 +1,4 @@
+Activity,Quantity,Unit,Booking ID
+Flight,1200,km,TRV-001
+Flight,60000,km,TRV-002
+Hotel,5,nights,TRV-003
