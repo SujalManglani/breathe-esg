@@ -12,7 +12,8 @@ SECRET_KEY = os.getenv(
     "django-insecure-CHANGE-ME"
 )
 
-DEBUG = True
+# ⚠️ KEEP False ON RENDER
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -30,6 +31,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
 ]
 
+# =========================
+# APPS
+# =========================
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -42,6 +47,10 @@ INSTALLED_APPS = [
     "corsheaders",
     "ingestion",
 ]
+
+# =========================
+# MIDDLEWARE
+# =========================
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -57,6 +66,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# =========================
+# CORS
+# =========================
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -77,7 +90,15 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 
+# =========================
+# URL CONFIG
+# =========================
+
 ROOT_URLCONF = "config.urls"
+
+# =========================
+# TEMPLATES
+# =========================
 
 TEMPLATES = [
     {
@@ -96,12 +117,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+# =========================
+# DATABASE
+# =========================
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# =========================
+# AUTH
+# =========================
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -110,13 +139,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# =========================
+# IMPORTANT FIX (ADMIN ERROR)
+# =========================
+
+# ❌ FIX FOR: 'en-us' is not a registered namespace error
+USE_I18N = False
 LANGUAGE_CODE = "en-us"
+
 TIME_ZONE = "UTC"
-USE_I18N = True
 USE_TZ = True
 
 # =========================
-# STATIC FILES (RENDER SAFE)
+# STATIC FILES
 # =========================
 
 STATIC_URL = "/static/"
@@ -130,5 +165,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# =========================
+# DEFAULT AUTO FIELD
+# =========================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
