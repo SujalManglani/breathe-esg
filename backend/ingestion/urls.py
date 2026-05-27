@@ -9,7 +9,7 @@ def home(request):
     })
 
 urlpatterns = [
-    path("", home),   # 👈 FIX
+    path("", home),
     path("admin/", admin.site.urls),
     path("api/", include("ingestion.urls")),
 ]
