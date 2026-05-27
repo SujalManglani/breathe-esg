@@ -48,18 +48,12 @@ function App() {
     fetchRecords();
     fetchSummary();
   }, []);
-  const SECURITY_HEADER = "eyJraWQiOiJnYXRld2F5X2NlcnRpZmljYXRlX2FsaWFzIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI5YmZjZTlkMC01MGVhLTQ4YzEtYTdjOC1kZTg2MmZlZTZhYjRAY2FyYm9uLnN1cGVyIiwiYXVkIjoiY2hvcmVvOmRlcGxveW1lbnQ6c2FuZGJveCIsIm9yZ2FuaXphdGlvbiI6eyJ1dWlkIjoiNTg2MDNmYTQtMTVhZS00Zjc0LTk1YTQtODZhNzc1MWZmMmNhIn0sImlzcyI6Imh0dHBzOlwvXC9zdHMuY2hvcmVvLmRldjo0NDNcL2FwaVwvYW1cL3B1Ymxpc2hlclwvdjJcL2FwaXNcL2ludGVybmFsLWtleSIsImtleXR5cGUiOiJTQU5EQk9YIiwic3Vic2NyaWJlZEFQSXMiOlt7InN1YnNjcmliZXJUZW5hbnREb21haW4iOm51bGwsIm5hbWUiOiJicmVhdGhlLWVzZy1iYWNrZW5kIC0gZGVmYXVsdC1lbmRwb2ludCIsImNvbnRleHQiOiJcLzU4NjAzZmE0LTE1YWUtNGY3NC05NWE0LTg2YTc3NTFmZjJjYVwvYnJlYXRoZS1lc2dcL2JyZWF0aGUtZXNnLWJhY2tlbmRcL3YxLjAiLCJwdWJsaXNoZXIiOiJjaG9yZW9fcHJvZF9hcGltX2FkbWluIiwidmVyc2lvbiI6InYxLjAiLCJzdWJzY3JpcHRpb25UaWVyIjpudWxsfV0sImV4cCI6MTc3OTg3NTAzNywidG9rZW5fdHlwZSI6IkludGVybmFsS2V5IiwiaWF0IjoxNzc5ODc0NDM3LCJqdGkiOiJkYjNmOWFiMy02NmZhLTRhYTMtOWVmZC05MmU5OTEyMmQ2MmMifQ.gkyImjaJgNEaRFBYyzAb-wlG68yakh3ITHupPAAs5fbTn9NdiF2XI_nxw0GfvfixjGitztRkm9P5lzHRXPnGkbnvIeJ5srADEzTkGxjQE4crgF7NSSymw2IwxadAXl7z-njlvfa3n5_FjX7fDkvaAnlN_HGZr1i_h6IRhtjVy4i7uVyugI9d_4MKCVjLZUTlvd_uzXT9GAvAkTLCFsnCsJylUnHiS_AIU2U0GYvXRuMSKEB0tsWBjFro7-Z5-t2bTFqHugHsHJCNwNTHYo1ht9gRw78E-i-RWhGqvhKo9E6BHRqf-bllZlWhHVbgy6OmyeAGKPnL0gc1CIUkKFV9C8DOXH2-dIEgfYEZwvtUgw8wx0y4rrhnx-iehr8C6epUtMBlrTpzo97kH_Kt3OyFc6XkgWBHNxYxRPyt7-4Hibah17XvU9lIkUIA_vN_g-84vSozgwGHsLZjTesHM6F5aqlcUC5upfE9JLRABqIBWNUMG6qQpkCKDdAAFVhd_kvGJJUSnDmQK8MmWWADG8OF2TUhNyOPL-nz0kgUvUzFGHNVAPULmXnuVDPYNLd4MLiAIdpB1m_FSEkb8Hcx15FAoiHlh3Jm40zFxCbWnxA1NMQAn7qqeaOzEo-_De_iIRJWiW-y2wDWIVzLUuhEJW1JgtXGy_-uOJVwjpeFlxqOnlw";
 
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-  "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0/api/records/",
-  {
-    headers: {
-      "Security-Header": SECURITY_HEADER
-    }
-  }
-);
+        "http://127.0.0.1:8000/api/records/"
+      );
 
       setRecords(response.data);
 
@@ -71,14 +65,8 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-  "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0/api/summary/",
-  {
-    headers: {
-      "Security-Header": SECURITY_HEADER
-    }
-  }
-);
-
+        "http://127.0.0.1:8000/api/summary/"
+      );
 
       setSummary(response.data);
 
@@ -109,13 +97,12 @@ function App() {
 
     try {
       await axios.post(
-  "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0/api/upload/",
+        "http://127.0.0.1:8000/api/upload/",
         formData,
         {
           headers: {
             "Content-Type":
-              "multipart/form-data",
-            "Security-Header": SECURITY_HEADER
+              "multipart/form-data"
           }
         }
       );
@@ -137,16 +124,11 @@ function App() {
   ) => {
     try {
       await axios.post(
-  `https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0/api/record/${recordId}/status/`,
+        `http://127.0.0.1:8000/api/record/${recordId}/status/`,
         {
           status: newStatus,
           reviewer: "admin",
           notes: `${newStatus} via dashboard`
-        },
-        {
-          headers: {
-            "Security-Header": SECURITY_HEADER
-          }
         }
       );
 
@@ -353,7 +335,7 @@ function App() {
                 mt-4
               "
             >
-              AI Powered ESG Intelligence Dashboard
+              Modern ESG Emission Tracking & Management
             </p>
 
           </div>
@@ -723,7 +705,7 @@ function App() {
                 pr-12
                 text-white
                 outline-none
-                focus:border-blue-350
+                focus:border-blue-500
                 transition-all
                 duration-300
                 cursor-pointer
@@ -1147,4 +1129,4 @@ function Card({
   );
 }
 
-export default App;
+export default App; 
