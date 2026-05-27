@@ -22,6 +22,15 @@ ChartJS.register(
   Legend
 );
 
+/* =========================
+   CHANGE THIS
+========================= */
+
+const API_BASE =
+  "https://YOUR-CHOREO-BACKEND-URL";
+
+/* ========================= */
+
 function App() {
   const [records, setRecords] =
     useState([]);
@@ -52,7 +61,7 @@ function App() {
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/records/"
+        `${API_BASE}/api/records/`
       );
 
       setRecords(response.data);
@@ -65,7 +74,7 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/summary/"
+        `${API_BASE}/api/summary/`
       );
 
       setSummary(response.data);
@@ -97,7 +106,7 @@ function App() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
+        `${API_BASE}/api/upload/`,
         formData,
         {
           headers: {
@@ -124,7 +133,7 @@ function App() {
   ) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/record/${recordId}/status/`,
+        `${API_BASE}/api/record/${recordId}/status/`,
         {
           status: newStatus,
           reviewer: "admin",
@@ -705,7 +714,6 @@ function App() {
                 pr-12
                 text-white
                 outline-none
-                focus:border-blue-350
                 transition-all
                 duration-300
                 cursor-pointer
