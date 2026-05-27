@@ -1,20 +1,15 @@
-from django.urls import path
+from django.contrib import admin
+from django.urls import path, include
+from django.http import JsonResponse
 
-from .views import (
-    get_records,
-    update_record_status,
-    upload_csv,
-    upload_page,
-    dashboard_summary
-)
+def home(request):
+    return JsonResponse({
+        "status": "Backend running",
+        "message": "Use /api/ endpoints"
+    })
 
 urlpatterns = [
-    path("records/", get_records),
-    path("upload/", upload_csv),
-    path("upload-page/", upload_page),
-    path("summary/", dashboard_summary),
-    path(
-        "record/<int:record_id>/status/",
-        update_record_status
-    ),
+    path("", home),   # 👈 FIX
+    path("admin/", admin.site.urls),
+    path("api/", include("ingestion.urls")),
 ]
