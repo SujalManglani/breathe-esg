@@ -3,10 +3,10 @@ from django.utils import timezone
 from django.db import transaction
 
 import pandas as pd
+import numpy as np
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 
 from .models import (
     Company,
@@ -23,7 +23,7 @@ from .serializers import EmissionRecordSerializer
 # -----------------------------------
 
 def normalize_unit(quantity, unit):
-    unit = str(unit).strip().lower()
+    unit = str(unit).strip().lower() if unit else ""
 
     conversions = {
         "gallon": (3.785, "liters"),
@@ -51,7 +51,7 @@ def get_scope(source_type):
         "SAP": "SCOPE_1",
         "UTILITY": "SCOPE_2",
         "TRAVEL": "SCOPE_3",
-    }.get(source_type, "SCOPE_3")
+    }.get(str(source_type).upper(), "SCOPE_3")
 
 
 # -----------------------------------
@@ -77,6 +77,9 @@ def calculate_emissions(activity, quantity):
 
 def detect_suspicious(source_type, quantity, activity):
     try:
+        if quantity is None or np.isnan(quantity):
+            return True
+
         if quantity < 0:
             return True
 
@@ -101,16 +104,20 @@ def detect_suspicious(source_type, quantity, activity):
 
 @api_view(["GET"])
 def get_records(request):
-    records = (
-        EmissionRecord.objects
-        .select_related("company", "source")
-        .all()
-        .order_by("-created_at")
-    )
+    try:
+        records = (
+            EmissionRecord.objects
+            .select_related("company", "source")
+            .all()
+            .order_by("-created_at")
+        )
 
-    return Response(
-        EmissionRecordSerializer(records, many=True).data
-    )
+        return Response(
+            EmissionRecordSerializer(records, many=True).data
+        )
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
 # -----------------------------------
@@ -131,7 +138,7 @@ def dashboard_summary(request):
 
 
 # -----------------------------------
-# CSV UPLOAD (FIXED + HARDENED)
+# CSV UPLOAD (SAFE VERSION)
 # -----------------------------------
 
 @api_view(["POST"])
@@ -148,19 +155,14 @@ def upload_csv(request):
         if not company_id:
             return Response({"error": "Missing company_id"}, status=400)
 
-        try:
-            company = Company.objects.get(id=int(company_id))
-        except Exception:
+        company = Company.objects.filter(id=company_id).first()
+        if not company:
             return Response({"error": "Invalid company_id"}, status=400)
 
-        # safer CSV read
         try:
             df = pd.read_csv(file)
         except Exception as e:
-            return Response({
-                "error": "Invalid CSV file",
-                "details": str(e)
-            }, status=400)
+            return Response({"error": "Invalid CSV", "details": str(e)}, status=400)
 
         data_source = DataSource.objects.create(
             company=company,
@@ -182,15 +184,13 @@ def upload_csv(request):
                     unit = row.get("Unit", "")
                     activity = row.get("Fuel Type") or row.get("Activity") or "Unknown"
 
-                    external_reference = row.get(
-                        "Booking ID",
-                        row.get("Meter ID", f"ROW-{index}")
-                    )
-
                     if pd.isna(quantity):
                         quantity = 0
 
-                    quantity = float(quantity)
+                    try:
+                        quantity = float(quantity)
+                    except:
+                        quantity = 0
 
                     normalized_quantity, normalized_unit = normalize_unit(quantity, unit)
 
@@ -201,17 +201,17 @@ def upload_csv(request):
                         normalized_quantity
                     )
 
-                    if not unit:
-                        status_value = "FAILED"
-                        failure_reason = "Missing unit"
-                        failed_count += 1
-                    elif suspicious:
-                        status_value = "PENDING"
-                        failure_reason = "Flagged suspicious"
+                    external_reference = row.get(
+                        "Booking ID",
+                        row.get("Meter ID", f"ROW-{index}")
+                    )
+
+                    status_value = "PENDING"
+                    failure_reason = None
+
+                    if suspicious:
                         suspicious_count += 1
                     else:
-                        status_value = "PENDING"
-                        failure_reason = None
                         valid_count += 1
 
                     record = EmissionRecord.objects.create(
@@ -242,7 +242,7 @@ def upload_csv(request):
                         comment="CSV ingestion"
                     )
 
-                except Exception as e:
+                except Exception:
                     failed_count += 1
                     continue
 
@@ -260,10 +260,7 @@ def upload_csv(request):
         })
 
     except Exception as e:
-        return Response({
-            "error": "Server error during upload",
-            "details": str(e)
-        }, status=500)
+        return Response({"error": str(e)}, status=500)
 
 
 # -----------------------------------
@@ -273,7 +270,10 @@ def upload_csv(request):
 @api_view(["POST"])
 def update_record_status(request, record_id):
     try:
-        record = EmissionRecord.objects.get(id=record_id)
+        record = EmissionRecord.objects.filter(id=record_id).first()
+
+        if not record:
+            return Response({"error": "Record not found"}, status=404)
 
         if record.status == "LOCKED":
             return Response({"error": "Locked records cannot be modified"}, status=400)
@@ -304,8 +304,8 @@ def update_record_status(request, record_id):
             "new_status": new_status
         })
 
-    except EmissionRecord.DoesNotExist:
-        return Response({"error": "Record not found"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
 # -----------------------------------
