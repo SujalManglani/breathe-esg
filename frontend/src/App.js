@@ -38,6 +38,12 @@ function App() {
   const [filterType, setFilterType] =
     useState("ALL");
 
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [themeGlow, setThemeGlow] =
+    useState(true);
+
   useEffect(() => {
     fetchRecords();
     fetchSummary();
@@ -78,11 +84,16 @@ function App() {
     const formData = new FormData();
 
     formData.append("file", file);
+
     formData.append(
       "source_type",
       sourceType
     );
-    formData.append("company_id", 1);
+
+    formData.append(
+      "company_id",
+      1
+    );
 
     try {
       await axios.post(
@@ -132,19 +143,26 @@ function App() {
 
   const filteredRecords =
     records.filter((record) => {
-      if (filterType === "ALL")
-        return true;
 
-      if (
-        filterType ===
-        "SUSPICIOUS"
-      ) {
-        return record.suspicious;
-      }
+      const matchesFilter =
+        filterType === "ALL"
+          ? true
+          : filterType ===
+            "SUSPICIOUS"
+          ? record.suspicious
+          : record.status ===
+            filterType;
+
+      const matchesSearch =
+        record.activity_type
+          ?.toLowerCase()
+          .includes(
+            searchTerm.toLowerCase()
+          );
 
       return (
-        record.status ===
-        filterType
+        matchesFilter &&
+        matchesSearch
       );
     });
 
@@ -188,10 +206,7 @@ function App() {
     plugins: {
       legend: {
         labels: {
-          color: "white",
-          font: {
-            weight: "400"
-          }
+          color: "white"
         }
       }
     },
@@ -199,10 +214,7 @@ function App() {
     scales: {
       x: {
         ticks: {
-          color: "white",
-          font: {
-            weight: "400"
-          }
+          color: "white"
         },
 
         grid: {
@@ -213,10 +225,7 @@ function App() {
 
       y: {
         ticks: {
-          color: "white",
-          font: {
-            weight: "400"
-          }
+          color: "white"
         },
 
         grid: {
@@ -229,523 +238,893 @@ function App() {
 
   return (
     <div
-
-   className="
-  min-h-screen
-  text-white
-  p-6 md:p-10
-  bg-black
-"
+      className="
+        min-h-screen
+        bg-black
+        text-white
+        overflow-hidden
+        relative
+      "
     >
-      {/* Header */}
 
-      <div className="mb-12">
-        <h1
-          className="
-            text-5xl
-            md:text-6xl
-            font-semibold
-            tracking-tight
-            bg-gradient-to-r
-            from-white
-            to-blue-400
-            bg-clip-text
-            text-transparent
-          "
-        >
-          Breathe ESG
-        </h1>
+      {/* Animated Background */}
 
-        <p className="text-slate-400 mt-3 text-lg">
-          Smart ESG Emissions Dashboard
-        </p>
-      </div>
-
-      {/* Summary Cards */}
-
-      <div className="grid md:grid-cols-4 gap-6 mb-10">
-        <Card
-          title="Total"
-          value={
-            summary.total_records ||
-            0
-          }
-        />
-
-        <Card
-          title="Suspicious"
-          value={
-            summary.suspicious || 0
-          }
-        />
-
-        <Card
-          title="Approved"
-          value={
-            summary.approved || 0
-          }
-        />
-
-        <Card
-          title="Pending"
-          value={
-            summary.pending || 0
-          }
-        />
-      </div>
-
-      {/* Upload + Analytics */}
-
-      <div className="grid lg:grid-cols-2 gap-8 mb-10">
-
-        {/* Upload */}
-
-        <div
-          className="
-            backdrop-blur-xl
-            bg-white/10
-            border border-white/10
-            p-8
-            rounded-3xl
-            shadow-2xl
-          "
-        >
-          <h2 className="text-2xl font-semibold mb-6">
-            Upload CSV
-          </h2>
-
-          <input
-            type="file"
-            onChange={(e) =>
-              setFile(
-                e.target.files[0]
-              )
-            }
+      {themeGlow && (
+        <>
+          <div
             className="
-              w-full
-              mb-5
-              bg-slate-900/60
-              border border-slate-700
-              p-4
-              rounded-xl
-              text-sm
+              absolute
+              top-[-200px]
+              left-[-150px]
+              w-[700px]
+              h-[700px]
+              bg-blue-600/20
+              blur-[180px]
+              rounded-full
+              animate-pulse
             "
           />
 
-          <select
-            value={sourceType}
-            onChange={(e) =>
-              setSourceType(
-                e.target.value
-              )
-            }
+          <div
             className="
-              w-full
-              p-4
-              rounded-xl
-              bg-slate-900/70
-              border border-slate-700
-              outline-none
-              focus:ring-2
-              focus:ring-blue-500
-              text-sm
+              absolute
+              bottom-[-200px]
+              right-[-150px]
+              w-[700px]
+              h-[700px]
+              bg-purple-600/20
+              blur-[180px]
+              rounded-full
             "
-          >
-            <option value="SAP">
-              SAP
-            </option>
-
-            <option value="UTILITY">
-              UTILITY
-            </option>
-
-            <option value="TRAVEL">
-              TRAVEL
-            </option>
-          </select>
-
-          <button
-            onClick={handleUpload}
-            className="
-              mt-6
-              w-full
-              bg-blue-600
-              hover:bg-blue-500
-              transition-all
-              duration-300
-              p-4
-              rounded-2xl
-              font-medium
-              shadow-lg
-              hover:scale-[1.02]
-            "
-          >
-            Upload CSV
-          </button>
-        </div>
-
-        {/* Analytics */}
-
-        <div
-          className="
-            backdrop-blur-xl
-            bg-white/10
-            border border-white/10
-            p-8
-            rounded-3xl
-            shadow-2xl
-          "
-        >
-          <h2 className="text-2xl font-semibold mb-6">
-            Analytics
-          </h2>
-
-          <Bar
-            data={chartData}
-            options={chartOptions}
           />
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Filters */}
-
-      <div className="mb-8">
-        <div
-          className="
-            backdrop-blur-xl
-            bg-white/10
-            border border-white/10
-            rounded-3xl
-            p-5
-            shadow-2xl
-            w-full
-            md:w-96
-          "
-        >
-          <label className="block text-slate-300 mb-3 text-sm font-medium">
-            Filter Records
-          </label>
-
-          <select
-            value={filterType}
-            onChange={(e) =>
-              setFilterType(
-                e.target.value
-              )
-            }
-            className="
-              w-full
-              bg-slate-900/70
-              border border-slate-700
-              text-white
-              p-4
-              rounded-2xl
-              outline-none
-              focus:ring-2
-              focus:ring-blue-500
-              transition-all
-              text-sm
-            "
-          >
-            <option value="ALL">
-              Show All
-            </option>
-
-            <option value="SUSPICIOUS">
-              Suspicious Only
-            </option>
-
-            <option value="APPROVED">
-              Approved
-            </option>
-
-            <option value="REJECTED">
-              Rejected
-            </option>
-
-            <option value="LOCKED">
-              Locked
-            </option>
-
-            <option value="PENDING">
-              Pending
-            </option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
+      {/* Main Content */}
 
       <div
         className="
-          backdrop-blur-xl
-          bg-white/10
-          border border-white/10
-          p-6
-          rounded-3xl
-          overflow-x-auto
-          shadow-2xl
+          relative
+          z-10
+          p-4
+          sm:p-6
+          md:p-10
         "
       >
-        <h2 className="text-2xl font-semibold mb-8">
-          Emission Records
-        </h2>
 
-        <table className="w-full">
-          <thead>
-            <tr
+        {/* Header */}
+
+        <div
+          className="
+            flex
+            flex-col
+            lg:flex-row
+            justify-between
+            items-start
+            gap-6
+            mb-14
+          "
+        >
+
+          <div>
+
+            <h1
               className="
-                text-left
-                border-b
-                border-slate-700
-                text-slate-300
-                text-sm
-                font-medium
+                text-4xl
+                sm:text-5xl
+                md:text-7xl
+                font-bold
+                tracking-tight
+                bg-gradient-to-r
+                from-white
+                via-blue-200
+                to-slate-400
+                bg-clip-text
+                text-transparent
               "
             >
-              <th className="p-4">
-                ID
-              </th>
+              Breathe ESG
+            </h1>
 
-              <th className="p-4">
-                Activity
-              </th>
+            <p
+              className="
+                text-slate-400
+                text-base
+                sm:text-lg
+                md:text-xl
+                mt-4
+              "
+            >
+              AI Powered ESG Intelligence Dashboard
+            </p>
 
-              <th className="p-4">
-                Scope
-              </th>
+          </div>
 
-              <th className="p-4">
-                Quantity
-              </th>
+          <button
+            onClick={() =>
+              setThemeGlow(!themeGlow)
+            }
+            className="
+              px-5
+              py-3
+              rounded-2xl
+              bg-white/10
+              border
+              border-white/10
+              backdrop-blur-xl
+              hover:bg-white/20
+              transition-all
+              duration-300
+              w-full
+              sm:w-auto
+            "
+          >
+            Effects
+          </button>
 
-              <th className="p-4">
-                Status
-              </th>
+        </div>
 
-              <th className="p-4">
-                Flag
-              </th>
+        {/* KPI Cards */}
 
-              <th className="p-4">
-                Actions
-              </th>
-            </tr>
-          </thead>
+        <div
+          className="
+            grid
+            grid-cols-1
+            sm:grid-cols-2
+            xl:grid-cols-4
+            gap-6
+            mb-10
+          "
+        >
 
-          <tbody>
-            {filteredRecords.map(
-              (record) => (
+          <Card
+            title="Total"
+            value={
+              summary.total_records || 0
+            }
+            glow="from-blue-500/20"
+          />
+
+          <Card
+            title="Suspicious"
+            value={
+              summary.suspicious || 0
+            }
+            glow="from-red-500/20"
+          />
+
+          <Card
+            title="Approved"
+            value={
+              summary.approved || 0
+            }
+            glow="from-green-500/20"
+          />
+
+          <Card
+            title="Pending"
+            value={
+              summary.pending || 0
+            }
+            glow="from-yellow-500/20"
+          />
+
+        </div>
+
+        {/* Upload + Analytics */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            xl:grid-cols-3
+            gap-8
+            mb-10
+          "
+        >
+
+          {/* Upload */}
+
+          <div
+            className="
+              xl:col-span-1
+              backdrop-blur-2xl
+              bg-white/10
+              border
+              border-white/10
+              rounded-[32px]
+              p-6
+              md:p-8
+              shadow-2xl
+              relative
+              overflow-hidden
+            "
+          >
+
+            <div
+              className="
+                absolute
+                top-0
+                right-0
+                w-40
+                h-40
+                bg-blue-500/20
+                blur-3xl
+                rounded-full
+              "
+            />
+
+            <h2
+              className="
+                text-2xl
+                md:text-3xl
+                font-semibold
+                mb-8
+              "
+            >
+              Upload Data
+            </h2>
+
+            <div
+              className="
+                border-2
+                border-dashed
+                border-slate-600
+                rounded-3xl
+                p-6
+                md:p-10
+                text-center
+                bg-black/20
+                hover:border-blue-500
+                transition-all
+                duration-300
+              "
+            >
+
+              <div className="text-5xl mb-4">
+                📂
+              </div>
+
+              <p className="text-slate-300 mb-6">
+                Drop your ESG CSV file
+              </p>
+
+              <input
+                type="file"
+                onChange={(e) =>
+                  setFile(
+                    e.target.files[0]
+                  )
+                }
+                className="w-full text-sm"
+              />
+
+            </div>
+
+            <div className="relative mt-6">
+
+              <select
+                value={sourceType}
+                onChange={(e) =>
+                  setSourceType(
+                    e.target.value
+                  )
+                }
+                className="
+                  w-full
+                  appearance-none
+                  bg-black/40
+                  border
+                  border-white/10
+                  rounded-2xl
+                  p-4
+                  pr-12
+                  outline-none
+                  text-white
+                "
+              >
+
+                <option
+                  value="SAP"
+                  className="bg-[#111]"
+                >
+                  SAP
+                </option>
+
+                <option
+                  value="UTILITY"
+                  className="bg-[#111]"
+                >
+                  UTILITY
+                </option>
+
+                <option
+                  value="TRAVEL"
+                  className="bg-[#111]"
+                >
+                  TRAVEL
+                </option>
+
+              </select>
+
+              <div
+                className="
+                  absolute
+                  right-5
+                  top-1/2
+                  -translate-y-1/2
+                  pointer-events-none
+                  text-slate-400
+                  text-sm
+                "
+              >
+                ▼
+              </div>
+
+            </div>
+
+            <button
+              onClick={handleUpload}
+              className="
+                mt-6
+                w-full
+                bg-gradient-to-r
+                from-blue-600
+                to-cyan-500
+                p-4
+                rounded-2xl
+                font-semibold
+                hover:scale-[1.02]
+                transition-all
+                shadow-2xl
+              "
+            >
+              Upload CSV
+            </button>
+
+          </div>
+
+          {/* Analytics */}
+
+          <div
+            className="
+              xl:col-span-2
+              backdrop-blur-2xl
+              bg-white/10
+              border
+              border-white/10
+              rounded-[32px]
+              p-4
+              md:p-6
+              shadow-2xl
+              overflow-hidden
+            "
+          >
+
+            <div
+              className="
+                flex
+                flex-col
+                sm:flex-row
+                justify-between
+                items-start
+                sm:items-center
+                gap-4
+                mb-6
+              "
+            >
+
+              <h2
+                className="
+                  text-2xl
+                  md:text-3xl
+                  font-semibold
+                "
+              >
+                Status Analytics
+              </h2>
+
+              <div
+                className="
+                  px-4
+                  py-2
+                  rounded-full
+                  bg-green-500/20
+                  text-green-400
+                  text-sm
+                "
+              >
+                Live
+              </div>
+
+            </div>
+
+            <div className="w-full overflow-x-auto">
+              <Bar
+                data={chartData}
+                options={chartOptions}
+              />
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Search + Filter */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            gap-6
+            mb-8
+          "
+        >
+
+          <input
+            type="text"
+            placeholder="Search activity type..."
+            value={searchTerm}
+            onChange={(e) =>
+              setSearchTerm(
+                e.target.value
+              )
+            }
+            className="
+              bg-white/10
+              border
+              border-white/10
+              backdrop-blur-xl
+              rounded-2xl
+              p-4
+              outline-none
+              text-white
+              placeholder:text-slate-500
+            "
+          />
+
+          <div className="relative w-full">
+
+            <select
+              value={filterType}
+              onChange={(e) =>
+                setFilterType(
+                  e.target.value
+                )
+              }
+              className="
+                w-full
+                appearance-none
+                bg-white/10
+                border
+                border-white/10
+                backdrop-blur-xl
+                rounded-2xl
+                p-4
+                pr-12
+                text-white
+                outline-none
+                focus:border-blue-350
+                transition-all
+                duration-300
+                cursor-pointer
+              "
+            >
+
+              <option
+                value="ALL"
+                className="bg-[#111]"
+              >
+                Show All
+              </option>
+
+              <option
+                value="SUSPICIOUS"
+                className="bg-[#111]"
+              >
+                Suspicious Only
+              </option>
+
+              <option
+                value="APPROVED"
+                className="bg-[#111]"
+              >
+                Approved
+              </option>
+
+              <option
+                value="REJECTED"
+                className="bg-[#111]"
+              >
+                Rejected
+              </option>
+
+              <option
+                value="LOCKED"
+                className="bg-[#111]"
+              >
+                Locked
+              </option>
+
+              <option
+                value="PENDING"
+                className="bg-[#111]"
+              >
+                Pending
+              </option>
+
+            </select>
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                right-5
+                top-1/2
+                -translate-y-1/2
+                text-slate-400
+                text-sm
+              "
+            >
+              ▼
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Table */}
+
+        <div
+          className="
+            backdrop-blur-2xl
+            bg-white/10
+            border
+            border-white/10
+            rounded-[32px]
+            p-4
+            md:p-6
+            overflow-hidden
+            shadow-2xl
+          "
+        >
+
+          <div
+            className="
+              flex
+              flex-col
+              sm:flex-row
+              justify-between
+              items-start
+              sm:items-center
+              gap-4
+              mb-8
+            "
+          >
+
+            <h2
+              className="
+                text-2xl
+                md:text-3xl
+                font-semibold
+              "
+            >
+              Emission Records
+            </h2>
+
+            <div
+              className="
+                px-4
+                py-2
+                rounded-full
+                bg-blue-500/20
+                text-blue-400
+                text-sm
+              "
+            >
+              {filteredRecords.length} Records
+            </div>
+
+          </div>
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full min-w-[900px]">
+
+              <thead>
+
                 <tr
-                  key={record.id}
                   className="
                     border-b
-                    border-slate-800
-                    hover:bg-white/5
-                    transition-all
-                    duration-200
+                    border-slate-700
+                    text-slate-300
+                    text-left
                   "
                 >
-                  <td className="p-4 text-sm">
-                    {record.id}
-                  </td>
 
-                  <td className="p-4 text-sm">
-                    {
-                      record.activity_type
-                    }
-                  </td>
+                  <th className="p-4">
+                    ID
+                  </th>
 
-                  <td className="p-4 text-sm">
-                    {record.scope}
-                  </td>
+                  <th className="p-4">
+                    Activity
+                  </th>
 
-                  <td className="p-4 text-sm">
-                    {
-                      record.normalized_quantity
-                    }{" "}
-                    {
-                      record.normalized_unit
-                    }
-                  </td>
+                  <th className="p-4">
+                    Scope
+                  </th>
 
-                  <td className="p-4">
-                    <span
-                      className={`
-                        px-4
-                        py-2
-                        rounded-full
-                        text-xs
-                        font-medium
+                  <th className="p-4">
+                    Quantity
+                  </th>
 
-                        ${
-                          record.status ===
-                          "APPROVED"
-                            ? "bg-green-500/20 text-green-400"
-                            : ""
-                        }
+                  <th className="p-4">
+                    Status
+                  </th>
 
-                        ${
-                          record.status ===
-                          "REJECTED"
-                            ? "bg-red-500/20 text-red-400"
-                            : ""
-                        }
+                  <th className="p-4">
+                    Flag
+                  </th>
 
-                        ${
-                          record.status ===
-                          "PENDING"
-                            ? "bg-yellow-500/20 text-yellow-300"
-                            : ""
-                        }
+                  <th className="p-4">
+                    Actions
+                  </th>
 
-                        ${
-                          record.status ===
-                          "LOCKED"
-                            ? "bg-slate-500/20 text-slate-300"
-                            : ""
-                        }
-                      `}
-                    >
-                      {
-                        record.status
-                      }
-                    </span>
-                  </td>
-
-                  <td className="p-4">
-                    {record.suspicious ? (
-                      <span
-                        className="
-                          text-red-400
-                          text-sm
-                          font-medium
-                        "
-                      >
-                        ⚠ Suspicious
-                      </span>
-                    ) : (
-                      <span
-                        className="
-                          text-green-400
-                          text-sm
-                          font-medium
-                        "
-                      >
-                        ✓ Normal
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="p-4">
-                    <div className="flex gap-2">
-
-                      <button
-                        onClick={() =>
-                          updateStatus(
-                            record.id,
-                            "APPROVED"
-                          )
-                        }
-                        className="
-                          bg-green-500/80
-                          hover:bg-green-500
-                          transition-all
-                          duration-300
-                          px-4
-                          py-2
-                          rounded-xl
-                          text-sm
-                          font-medium
-                          shadow-lg
-                        "
-                      >
-                        Approve
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          updateStatus(
-                            record.id,
-                            "REJECTED"
-                          )
-                        }
-                        className="
-                          bg-red-500/80
-                          hover:bg-red-500
-                          transition-all
-                          duration-300
-                          px-4
-                          py-2
-                          rounded-xl
-                          text-sm
-                          font-medium
-                          shadow-lg
-                        "
-                      >
-                        Reject
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          updateStatus(
-                            record.id,
-                            "LOCKED"
-                          )
-                        }
-                        className="
-                          bg-slate-500/80
-                          hover:bg-slate-500
-                          transition-all
-                          duration-300
-                          px-4
-                          py-2
-                          rounded-xl
-                          text-sm
-                          font-medium
-                          shadow-lg
-                        "
-                      >
-                        Lock
-                      </button>
-
-                    </div>
-                  </td>
                 </tr>
-              )
-            )}
-          </tbody>
-        </table>
+
+              </thead>
+
+              <tbody>
+
+                {filteredRecords.map(
+                  (record) => (
+
+                    <tr
+                      key={record.id}
+                      className="
+                        border-b
+                        border-slate-800
+                        hover:bg-white/5
+                        transition-all
+                      "
+                    >
+
+                      <td className="p-4">
+                        {record.id}
+                      </td>
+
+                      <td className="p-4">
+                        {
+                          record.activity_type
+                        }
+                      </td>
+
+                      <td className="p-4">
+                        {record.scope}
+                      </td>
+
+                      <td className="p-4">
+                        {
+                          record.normalized_quantity
+                        }{" "}
+                        {
+                          record.normalized_unit
+                        }
+                      </td>
+
+                      <td className="p-4">
+
+                        <span
+                          className={`
+                            px-4
+                            py-2
+                            rounded-full
+                            text-xs
+                            font-medium
+
+                            ${
+                              record.status ===
+                              "APPROVED"
+                                ? "bg-green-500/20 text-green-400"
+                                : ""
+                            }
+
+                            ${
+                              record.status ===
+                              "REJECTED"
+                                ? "bg-red-500/20 text-red-400"
+                                : ""
+                            }
+
+                            ${
+                              record.status ===
+                              "PENDING"
+                                ? "bg-yellow-500/20 text-yellow-300"
+                                : ""
+                            }
+
+                            ${
+                              record.status ===
+                              "LOCKED"
+                                ? "bg-slate-500/20 text-slate-300"
+                                : ""
+                            }
+                          `}
+                        >
+                          {
+                            record.status
+                          }
+                        </span>
+
+                      </td>
+
+                      <td className="p-4">
+
+                        {record.suspicious ? (
+                          <span className="text-red-400">
+                            ⚠ Suspicious
+                          </span>
+                        ) : (
+                          <span className="text-green-400">
+                            ✓ Normal
+                          </span>
+                        )}
+
+                      </td>
+
+                      <td className="p-4">
+
+                        <div
+                          className="
+                            flex
+                            flex-wrap
+                            gap-2
+                          "
+                        >
+
+                          <button
+                            onClick={() =>
+                              updateStatus(
+                                record.id,
+                                "APPROVED"
+                              )
+                            }
+                            className="
+                              bg-green-500/80
+                              hover:bg-green-500
+                              px-4
+                              py-2
+                              rounded-xl
+                              text-sm
+                              transition-all
+                            "
+                          >
+                            Approve
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              updateStatus(
+                                record.id,
+                                "REJECTED"
+                              )
+                            }
+                            className="
+                              bg-red-500/80
+                              hover:bg-red-500
+                              px-4
+                              py-2
+                              rounded-xl
+                              text-sm
+                              transition-all
+                            "
+                          >
+                            Reject
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              updateStatus(
+                                record.id,
+                                "LOCKED"
+                              )
+                            }
+                            className="
+                              bg-slate-500/80
+                              hover:bg-slate-500
+                              px-4
+                              py-2
+                              rounded-xl
+                              text-sm
+                              transition-all
+                            "
+                          >
+                            Lock
+                          </button>
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  )
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </div>
+
     </div>
   );
 }
 
 function Card({
   title,
-  value
+  value,
+  glow
 }) {
   return (
     <div
-      className="
+      className={`
+        relative
+        overflow-hidden
         backdrop-blur-xl
         bg-white/10
-        border border-white/10
+        border
+        border-white/10
         p-6
-        rounded-3xl
+        md:p-8
+        rounded-[32px]
         shadow-2xl
-        hover:scale-105
+        hover:scale-[1.03]
         transition-all
-        duration-300
-      "
+        duration-500
+      `}
     >
-      <h3 className="text-slate-300 text-base font-medium">
-        {title}
-      </h3>
 
-      <h1 className="text-5xl font-semibold mt-3 tracking-tight">
-        {value}
-      </h1>
+      <div
+        className={`
+          absolute
+          inset-0
+          bg-gradient-to-br
+          ${glow}
+          to-transparent
+        `}
+      />
+
+      <div className="relative z-10">
+
+        <h3
+          className="
+            text-slate-300
+            text-base
+            md:text-lg
+          "
+        >
+          {title}
+        </h3>
+
+        <h1
+          className="
+            text-5xl
+            md:text-6xl
+            font-bold
+            mt-4
+          "
+        >
+          {value}
+        </h1>
+
+      </div>
+
     </div>
   );
 }
