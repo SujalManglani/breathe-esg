@@ -32,7 +32,7 @@ function App() {
   const [filterType, setFilterType] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [themeGlow, setThemeGlow] = useState(true);
-
+  const [uploading, setUploading] = useState(false);
 
   const API_BASE = process.env.REACT_APP_API_BASE;
 
@@ -101,48 +101,52 @@ function App() {
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) {
-      alert("Please select a CSV");
-      return;
-    }
+const handleUpload = async () => {
+  if (!file) {
+    alert("Please select a CSV");
+    return;
+  }
 
-    const formData = new FormData();
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("source_type", sourceType);
+  formData.append("company_id", 1);
 
-    formData.append("file", file);
+  setSummary((prev) => ({
+    ...prev,
+    total_records: (prev.total_records || 0) + 1,
+  }));
 
-    formData.append(
-      "source_type",
-      sourceType
+  setUploading(true);
+
+  try {
+    const response = await axios.post(
+      `${API_BASE}/api/upload/`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
 
-    formData.append(
-      "company_id",
-      1
-    );
+    fetchRecords();
+    fetchSummary();
 
-    try {
-      await axios.post(
-        `${API_BASE}/api/upload/`,
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data"
-          }
-        }
-      );
+    alert("Upload successful");
+  } catch (error) {
+    console.log(error);
 
-      alert("Upload successful");
+    setSummary((prev) => ({
+      ...prev,
+      total_records: Math.max((prev.total_records || 1) - 1, 0),
+    }));
 
-      fetchRecords();
-      fetchSummary();
-
-    } catch (error) {
-      console.log(error);
-      alert("Upload failed");
-    }
-  };
+    alert("Upload failed");
+  } finally {
+    setUploading(false);
+  }
+};
 
   const updateStatus = async (
     recordId,
@@ -588,24 +592,17 @@ function App() {
 
             </div>
 
-            <button
-              onClick={handleUpload}
-              className="
-                mt-6
-                w-full
-                bg-gradient-to-r
-                from-blue-600
-                to-cyan-500
-                p-4
-                rounded-2xl
-                font-semibold
-                hover:scale-[1.02]
-                transition-all
-                shadow-2xl
-              "
-            >
-              Upload CSV
-            </button>
+<button
+  onClick={handleUpload}
+  disabled={uploading}
+  className={`mt-6 w-full p-4 rounded-2xl font-semibold transition-all shadow-2xl
+    ${uploading
+      ? "bg-gray-500"
+      : "bg-gradient-to-r from-blue-600 to-cyan-500"}
+  `}
+>
+  {uploading ? "Processing..." : "Upload CSV"}
+</button>
 
           </div>
 
