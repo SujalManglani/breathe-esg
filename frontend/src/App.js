@@ -49,10 +49,13 @@ function App() {
     fetchSummary();
   }, []);
 
+  const API_BASE =
+  "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0";
+
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/records/"
+        `${API_BASE}/api/records/`
       );
 
       setRecords(response.data);
@@ -65,7 +68,7 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/dashboard/"
+        `${API_BASE}/api/dashboard/`
       );
 
       setSummary(response.data);
@@ -97,7 +100,7 @@ function App() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
+        `${API_BASE}/api/upload/`,
         formData,
         {
           headers: {
@@ -124,7 +127,7 @@ function App() {
   ) => {
   try {
     await axios.post(
-      `http://127.0.0.1:8000/api/update/${recordId}/`,
+      `${API_BASE}/api/update/${recordId}/`,
       {
         status: newStatus,
         reviewer: "admin",
