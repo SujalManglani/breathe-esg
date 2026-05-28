@@ -49,7 +49,7 @@ function App() {
     fetchSummary();
   }, []);
 
-  const API_BASE =
+ const API_BASE =
   "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0";
 
   const fetchRecords = async () => {
