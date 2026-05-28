@@ -8,20 +8,13 @@ import numpy as np
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .models import (
-    Company,
-    DataSource,
-    EmissionRecord,
-    AuditLog
-)
-
+from .models import Company, DataSource, EmissionRecord, AuditLog
 from .serializers import EmissionRecordSerializer
 
 
-# -----------------------------------
+# -----------------------------
 # UNIT NORMALIZATION
-# -----------------------------------
-
+# -----------------------------
 def normalize_unit(quantity, unit):
     unit = str(unit).strip().lower() if unit else ""
 
@@ -42,10 +35,9 @@ def normalize_unit(quantity, unit):
     return quantity, unit
 
 
-# -----------------------------------
+# -----------------------------
 # SCOPE MAPPING
-# -----------------------------------
-
+# -----------------------------
 def get_scope(source_type):
     return {
         "SAP": "SCOPE_1",
@@ -54,10 +46,9 @@ def get_scope(source_type):
     }.get(str(source_type).upper(), "SCOPE_3")
 
 
-# -----------------------------------
+# -----------------------------
 # EMISSION FACTORS
-# -----------------------------------
-
+# -----------------------------
 EMISSION_FACTORS = {
     "diesel": 2.68,
     "petrol": 2.31,
@@ -71,10 +62,9 @@ def calculate_emissions(activity, quantity):
     return factor, quantity * factor
 
 
-# -----------------------------------
+# -----------------------------
 # SUSPICIOUS DETECTION
-# -----------------------------------
-
+# -----------------------------
 def detect_suspicious(source_type, quantity, activity):
     try:
         if quantity is None or np.isnan(quantity):
@@ -98,32 +88,35 @@ def detect_suspicious(source_type, quantity, activity):
         return True
 
 
-# -----------------------------------
-# GET RECORDS
-# -----------------------------------
+# -----------------------------
+# HEALTH CHECK
+# -----------------------------
+@api_view(["GET"])
+def health(request):
+    return Response({
+        "status": "ok",
+        "message": "API is running"
+    })
 
+
+# -----------------------------
+# GET RECORDS
+# -----------------------------
 @api_view(["GET"])
 def get_records(request):
-    try:
-        records = (
-            EmissionRecord.objects
-            .select_related("company", "source")
-            .all()
-            .order_by("-created_at")
-        )
+    records = (
+        EmissionRecord.objects
+        .select_related("company", "source")
+        .all()
+        .order_by("-created_at")
+    )
 
-        return Response(
-            EmissionRecordSerializer(records, many=True).data
-        )
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return Response(EmissionRecordSerializer(records, many=True).data)
 
 
-# -----------------------------------
-# DASHBOARD SUMMARY
-# -----------------------------------
-
+# -----------------------------
+# DASHBOARD
+# -----------------------------
 @api_view(["GET"])
 def dashboard_summary(request):
     return Response({
@@ -137,10 +130,9 @@ def dashboard_summary(request):
     })
 
 
-# -----------------------------------
-# CSV UPLOAD (SAFE VERSION)
-# -----------------------------------
-
+# -----------------------------
+# CSV UPLOAD
+# -----------------------------
 @api_view(["POST"])
 def upload_csv(request):
     try:
@@ -152,17 +144,11 @@ def upload_csv(request):
         if not file:
             return Response({"error": "No file uploaded"}, status=400)
 
-        if not company_id:
-            return Response({"error": "Missing company_id"}, status=400)
-
         company = Company.objects.filter(id=company_id).first()
         if not company:
             return Response({"error": "Invalid company_id"}, status=400)
 
-        try:
-            df = pd.read_csv(file)
-        except Exception as e:
-            return Response({"error": "Invalid CSV", "details": str(e)}, status=400)
+        df = pd.read_csv(file)
 
         data_source = DataSource.objects.create(
             company=company,
@@ -173,144 +159,110 @@ def upload_csv(request):
             uploaded_by=uploaded_by,
         )
 
-        suspicious_count = 0
-        valid_count = 0
-        failed_count = 0
+        valid = suspicious = failed = 0
 
         with transaction.atomic():
-            for index, row in df.iterrows():
+            for i, row in df.iterrows():
                 try:
                     quantity = row.get("Quantity", 0)
-                    unit = row.get("Unit", "")
-                    activity = row.get("Fuel Type") or row.get("Activity") or "Unknown"
-
-                    if pd.isna(quantity):
-                        quantity = 0
 
                     try:
                         quantity = float(quantity)
                     except:
                         quantity = 0
 
-                    normalized_quantity, normalized_unit = normalize_unit(quantity, unit)
+                    unit = row.get("Unit", "")
+                    activity = row.get("Fuel Type") or row.get("Activity") or "Unknown"
 
-                    suspicious = detect_suspicious(source_type, quantity, activity)
+                    normalized_q, normalized_u = normalize_unit(quantity, unit)
 
-                    emission_factor, calculated_emissions = calculate_emissions(
-                        activity,
-                        normalized_quantity
-                    )
+                    suspicious_flag = detect_suspicious(source_type, quantity, activity)
 
-                    external_reference = row.get(
-                        "Booking ID",
-                        row.get("Meter ID", f"ROW-{index}")
-                    )
+                    factor, emissions = calculate_emissions(activity, normalized_q)
 
-                    status_value = "PENDING"
-                    failure_reason = None
+                    ref = row.get("Booking ID") or row.get("Meter ID") or f"ROW-{i}"
 
-                    if suspicious:
-                        suspicious_count += 1
-                    else:
-                        valid_count += 1
-
-                    record = EmissionRecord.objects.create(
+                    EmissionRecord.objects.create(
                         company=company,
                         source=data_source,
-                        external_reference=external_reference,
+                        external_reference=ref,
                         category=source_type,
                         scope=get_scope(source_type),
                         activity_type=str(activity),
                         quantity=quantity,
                         unit=str(unit),
-                        normalized_quantity=normalized_quantity,
-                        normalized_unit=normalized_unit,
-                        emission_factor=emission_factor,
+                        normalized_quantity=normalized_q,
+                        normalized_unit=normalized_u,
+                        emission_factor=factor,
                         emission_factor_source="DEFRA 2024",
-                        calculated_emissions=calculated_emissions,
+                        calculated_emissions=emissions,
                         raw_data=row.to_dict(),
-                        suspicious=suspicious,
-                        status=status_value,
-                        failure_reason=failure_reason
+                        suspicious=suspicious_flag,
+                        status="PENDING",
+                        failure_reason=None
                     )
 
-                    AuditLog.objects.create(
-                        record=record,
-                        action="CREATE",
-                        changed_by=uploaded_by,
-                        new_value=row.to_dict(),
-                        comment="CSV ingestion"
-                    )
+                    if suspicious_flag:
+                        suspicious += 1
+                    else:
+                        valid += 1
 
                 except Exception:
-                    failed_count += 1
-                    continue
+                    failed += 1
 
-        data_source.valid_rows = valid_count
-        data_source.suspicious_rows = suspicious_count
-        data_source.failed_rows = failed_count
+        data_source.valid_rows = valid
+        data_source.suspicious_rows = suspicious
+        data_source.failed_rows = failed
         data_source.save()
 
         return Response({
-            "message": "CSV uploaded successfully",
-            "total_rows": len(df),
-            "valid_rows": valid_count,
-            "suspicious_rows": suspicious_count,
-            "failed_rows": failed_count,
+            "message": "Upload successful",
+            "total": len(df),
+            "valid": valid,
+            "suspicious": suspicious,
+            "failed": failed
         })
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
 
-# -----------------------------------
+# -----------------------------
 # UPDATE STATUS
-# -----------------------------------
-
+# -----------------------------
 @api_view(["POST"])
 def update_record_status(request, record_id):
-    try:
-        record = EmissionRecord.objects.filter(id=record_id).first()
+    record = EmissionRecord.objects.filter(id=record_id).first()
 
-        if not record:
-            return Response({"error": "Record not found"}, status=404)
+    if not record:
+        return Response({"error": "Record not found"}, status=404)
 
-        if record.status == "LOCKED":
-            return Response({"error": "Locked records cannot be modified"}, status=400)
+    if record.status == "LOCKED":
+        return Response({"error": "Locked record"}, status=400)
 
-        new_status = request.data.get("status")
-        reviewer = request.data.get("reviewer", "admin")
-        notes = request.data.get("notes", "")
+    new_status = request.data.get("status")
 
-        old_status = record.status
-        record.status = new_status
-        record.reviewed_by = reviewer
-        record.reviewed_at = timezone.now()
-        record.notes = notes
-        record.save()
+    old = record.status
+    record.status = new_status
+    record.reviewed_by = request.data.get("reviewer", "admin")
+    record.reviewed_at = timezone.now()
+    record.notes = request.data.get("notes", "")
+    record.save()
 
-        AuditLog.objects.create(
-            record=record,
-            action="UPDATE",
-            changed_by=reviewer,
-            old_value={"status": old_status},
-            new_value={"status": new_status},
-            comment=notes
-        )
+    AuditLog.objects.create(
+        record=record,
+        action="UPDATE",
+        changed_by=record.reviewed_by,
+        old_value={"status": old},
+        new_value={"status": new_status},
+        comment=record.notes
+    )
 
-        return Response({
-            "message": "Status updated",
-            "record_id": record.id,
-            "new_status": new_status
-        })
-
-    except Exception as e:
-        return Response({"error": str(e)}, status=500)
+    return Response({"message": "Updated"})
 
 
-# -----------------------------------
+# -----------------------------
 # HTML PAGE
-# -----------------------------------
-
+# -----------------------------
 def upload_page(request):
     return render(request, "ingestion/upload.html")
