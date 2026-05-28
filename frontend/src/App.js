@@ -23,58 +23,81 @@ ChartJS.register(
 );
 
 function App() {
-  const [records, setRecords] =
-    useState([]);
 
-  const [summary, setSummary] =
-    useState({});
+  // 1️⃣ STATES (you already have these)
+  const [summary, setSummary] = useState({});
+  const [records, setRecords] = useState([]);
+  const [file, setFile] = useState(null);
+  const [sourceType, setSourceType] = useState("SAP");
+  const [filterType, setFilterType] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [themeGlow, setThemeGlow] = useState(true);
 
-  const [file, setFile] =
-    useState(null);
+  // 2️⃣ API BASE
+  const API_BASE = import.meta.env.VITE_API_BASE;
 
-  const [sourceType, setSourceType] =
-    useState("SAP");
-
-  const [filterType, setFilterType] =
-    useState("ALL");
-
-  const [searchTerm, setSearchTerm] =
-    useState("");
-
-  const [themeGlow, setThemeGlow] =
-    useState(true);
-
-  useEffect(() => {
-    fetchRecords();
-    fetchSummary();
-  }, []);
-
- const API_BASE =
-  "https://58603fa4-15ae-4f74-95a4-86a7751ff2ca-dev.e1-us-east-azure.choreoapis.dev/breathe-esg/breathe-esg-backend/v1.0";
-
-  const fetchRecords = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE}/api/records/`
-      );
-
-      setRecords(response.data);
-
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
+  // 3️⃣ 🔥 PUT THIS HERE (fetchSummary)
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
         `${API_BASE}/api/dashboard/`
       );
 
-      setSummary(response.data);
+      const data = response.data;
+
+      const normalized = {
+        approved:
+          data.approved ??
+          data.approved_count ??
+          data.data?.approved ??
+          0,
+
+        pending:
+          data.pending ??
+          data.pending_count ??
+          data.data?.pending ??
+          0,
+
+        rejected:
+          data.rejected ??
+          data.rejected_count ??
+          data.data?.rejected ??
+          0,
+
+        locked:
+          data.locked ??
+          data.locked_count ??
+          data.data?.locked ??
+          0,
+
+        suspicious:
+          data.suspicious ??
+          data.suspicious_count ??
+          data.data?.suspicious ??
+          0,
+
+        total_records:
+          data.total_records ??
+          data.total ??
+          data.data?.total_records ??
+          0
+      };
+
+      setSummary(normalized);
 
     } catch (error) {
-      console.log(error);
+      console.log("dashboard error:", error);
+    }
+  };
+
+  // 4️⃣ OTHER FUNCTIONS (fetchRecords, upload, etc.)
+  const fetchRecords = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/records/`);
+      setRecords(response.data || []);
+    } catch (error) {
+      console.log("fetchRecords error:", error);
+      setRecords([]);
     }
   };
 
