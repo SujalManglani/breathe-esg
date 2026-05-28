@@ -135,9 +135,12 @@ def upload_csv(request):
         if not file:
             return Response({"error": "No file uploaded"}, status=400)
 
-        company = Company.objects.filter(id=company_id).first()
+        company = Company.objects.first()
+
         if not company:
-            return Response({"error": "Invalid company_id"}, status=400)
+            company = Company.objects.create(
+                name="Default Company"
+            )
 
         df = pd.read_csv(file)
 
