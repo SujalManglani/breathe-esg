@@ -69,10 +69,8 @@ def detect_suspicious(source_type, quantity, activity):
     try:
         if quantity is None or np.isnan(quantity):
             return True
-
         if quantity < 0:
             return True
-
         if pd.isna(activity):
             return True
 
@@ -95,7 +93,7 @@ def detect_suspicious(source_type, quantity, activity):
 def health(request):
     return Response({
         "status": "ok",
-        "message": "API is running"
+        "message": "API running"
     })
 
 
@@ -104,14 +102,16 @@ def health(request):
 # -----------------------------
 @api_view(["GET"])
 def get_records(request):
-    records = (
-        EmissionRecord.objects
-        .select_related("company", "source")
-        .all()
-        .order_by("-created_at")
-    )
+    try:
+        records = EmissionRecord.objects.select_related(
+            "company", "source"
+        ).all().order_by("-created_at")
 
-    return Response(EmissionRecordSerializer(records, many=True).data)
+        serializer = EmissionRecordSerializer(records, many=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
 
 
 # -----------------------------
@@ -242,7 +242,7 @@ def update_record_status(request, record_id):
 
     new_status = request.data.get("status")
 
-    old = record.status
+    old_status = record.status
     record.status = new_status
     record.reviewed_by = request.data.get("reviewer", "admin")
     record.reviewed_at = timezone.now()
@@ -253,7 +253,7 @@ def update_record_status(request, record_id):
         record=record,
         action="UPDATE",
         changed_by=record.reviewed_by,
-        old_value={"status": old},
+        old_value={"status": old_status},
         new_value={"status": new_status},
         comment=record.notes
     )

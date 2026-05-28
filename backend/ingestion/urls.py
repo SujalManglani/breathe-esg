@@ -4,7 +4,8 @@ from .views import (
     upload_csv,
     upload_page,
     dashboard_summary,
-    update_record_status
+    update_record_status,
+    health
 )
 
 urlpatterns = [
@@ -13,4 +14,7 @@ urlpatterns = [
     path("upload-page/", upload_page),
     path("summary/", dashboard_summary),
     path("record/<int:record_id>/status/", update_record_status),
+
+    # optional but recommended
+    path("health/", health),
 ]

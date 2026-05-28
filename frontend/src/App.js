@@ -49,10 +49,12 @@ function App() {
     fetchSummary();
   }, []);
 
+  const API_BASE = "https://breathe-esg-w10o.onrender.com";
+
   const fetchRecords = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/records/"
+        `${API_BASE}/api/records/`
       );
 
       setRecords(response.data);
@@ -64,9 +66,9 @@ function App() {
 
   const fetchSummary = async () => {
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/api/summary/"
-      );
+  const response = await axios.get(
+  `${API_BASE}/api/summary/`
+);
 
       setSummary(response.data);
 
@@ -97,15 +99,14 @@ function App() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/upload/",
-        formData,
-        {
-          headers: {
-            "Content-Type":
-              "multipart/form-data"
-          }
-        }
-      );
+  `${API_BASE}/api/upload/`,
+  formData,
+  {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  }
+);
 
       alert("Upload successful");
 
@@ -124,7 +125,7 @@ function App() {
   ) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/record/${recordId}/status/`,
+        `${API_BASE}/api/record/${recordId}/status/`,
         {
           status: newStatus,
           reviewer: "admin",

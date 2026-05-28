@@ -3,6 +3,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # =========================
 # SECURITY
 # =========================
@@ -12,24 +13,30 @@ SECRET_KEY = os.getenv(
     "django-insecure-CHANGE-ME"
 )
 
-# ⚠️ KEEP False ON RENDER
 DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    ".vercel.app",
     ".onrender.com",
+    ".vercel.app",
 ]
 
+
 # =========================
-# CSRF / CORS
+# CSRF / SECURITY
 # =========================
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.vercel.app",
     "https://*.onrender.com",
+    "https://*.vercel.app",
 ]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 
 # =========================
 # APPS
@@ -47,6 +54,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "ingestion",
 ]
+
 
 # =========================
 # MIDDLEWARE
@@ -66,6 +74,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 # =========================
 # CORS
@@ -90,11 +99,13 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 
+
 # =========================
-# URL CONFIG
+# URLS
 # =========================
 
 ROOT_URLCONF = "config.urls"
+
 
 # =========================
 # TEMPLATES
@@ -115,7 +126,9 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "config.wsgi.application"
+
 
 # =========================
 # DATABASE
@@ -128,6 +141,7 @@ DATABASES = {
     }
 }
 
+
 # =========================
 # AUTH
 # =========================
@@ -139,16 +153,17 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+
 # =========================
-# IMPORTANT FIX (ADMIN ERROR)
+# LANGUAGE / TIMEZONE
 # =========================
 
-# ❌ FIX FOR: 'en-us' is not a registered namespace error
-USE_I18N = False
+USE_I18N = True
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
 USE_TZ = True
+
 
 # =========================
 # STATIC FILES
@@ -157,7 +172,15 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 
 # =========================
 # MEDIA FILES
@@ -165,6 +188,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
 
 # =========================
 # DEFAULT AUTO FIELD
