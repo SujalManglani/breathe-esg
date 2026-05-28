@@ -24,7 +24,7 @@ ChartJS.register(
 
 function App() {
 
-  // 1️⃣ STATES (you already have these)
+
   const [summary, setSummary] = useState({});
   const [records, setRecords] = useState([]);
   const [file, setFile] = useState(null);
@@ -33,10 +33,10 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [themeGlow, setThemeGlow] = useState(true);
 
-  // 2️⃣ API BASE
+
   const API_BASE = import.meta.env.VITE_API_BASE;
 
-  // 3️⃣ 🔥 PUT THIS HERE (fetchSummary)
+
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
@@ -90,7 +90,7 @@ function App() {
     }
   };
 
-  // 4️⃣ OTHER FUNCTIONS (fetchRecords, upload, etc.)
+
   const fetchRecords = async () => {
     try {
       const response = await axios.get(`${API_BASE}/api/records/`);
