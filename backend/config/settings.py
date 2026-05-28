@@ -9,15 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
 
-# ❗ IMPORTANT: Choreo = production
+# Production mode
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".choreoapis.dev",
-    ".choreo.dev",
-]
+# Allow Choreo domains
+ALLOWED_HOSTS = ["*"]
 
 # =========================
 # CSRF
@@ -44,6 +40,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "corsheaders",
+
     "ingestion",
 ]
 
@@ -53,8 +50,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # WhiteNoise
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
+    # CORS
     "corsheaders.middleware.CorsMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -89,7 +89,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # =========================
-# DATABASE (KEEP SQLITE FOR NOW)
+# DATABASE
 # =========================
 
 DATABASES = {
@@ -100,7 +100,25 @@ DATABASES = {
 }
 
 # =========================
-# REST FRAMEWORK (IMPORTANT FIX)
+# PASSWORD VALIDATION
+# =========================
+
+AUTH_PASSWORD_VALIDATORS = []
+
+# =========================
+# INTERNATIONALIZATION
+# =========================
+
+LANGUAGE_CODE = "en-us"
+
+TIME_ZONE = "UTC"
+
+USE_I18N = True
+
+USE_TZ = True
+
+# =========================
+# REST FRAMEWORK
 # =========================
 
 REST_FRAMEWORK = {
@@ -116,23 +134,24 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 # =========================
-# STATIC
+# STATIC FILES
 # =========================
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    }
-}
+# IMPORTANT FIX
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 # =========================
-# MEDIA
+# MEDIA FILES
 # =========================
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# =========================
+# DEFAULT PRIMARY KEY
+# =========================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

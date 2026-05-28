@@ -65,7 +65,7 @@ function App() {
   const fetchSummary = async () => {
     try {
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/summary/"
+        "http://127.0.0.1:8000/api/dashboard/"
       );
 
       setSummary(response.data);
@@ -122,24 +122,23 @@ function App() {
     recordId,
     newStatus
   ) => {
-    try {
-      await axios.post(
-        `http://127.0.0.1:8000/api/record/${recordId}/status/`,
-        {
-          status: newStatus,
-          reviewer: "admin",
-          notes: `${newStatus} via dashboard`
-        }
-      );
+  try {
+    await axios.post(
+      `http://127.0.0.1:8000/api/update/${recordId}/`,
+      {
+        status: newStatus,
+        reviewer: "admin",
+        notes: `${newStatus} via dashboard`,
+      }
+    );
 
-      fetchRecords();
-      fetchSummary();
-
-    } catch (error) {
-      console.log(error);
-      alert("Status update failed");
-    }
-  };
+    fetchRecords();
+    fetchSummary();
+  } catch (error) {
+    console.log(error);
+    alert("Status update failed");
+  }
+};
 
   const filteredRecords =
     records.filter((record) => {
