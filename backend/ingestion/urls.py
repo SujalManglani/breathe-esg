@@ -1,20 +1,18 @@
 from django.urls import path
 from .views import (
+    health,
     get_records,
-    upload_csv,
-    upload_page,
     dashboard_summary,
+    upload_csv,
     update_record_status,
-    health
+    upload_page,
 )
 
 urlpatterns = [
-    path("records/", get_records),
-    path("upload/", upload_csv),
-    path("upload-page/", upload_page),
-    path("summary/", dashboard_summary),
-    path("record/<int:record_id>/status/", update_record_status),
-
-    # optional but recommended
     path("health/", health),
+    path("records/", get_records),
+    path("dashboard/", dashboard_summary),
+    path("upload/", upload_csv),
+    path("update/<int:record_id>/", update_record_status),
+    path("", upload_page),
 ]

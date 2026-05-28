@@ -3,13 +3,22 @@ from django.utils import timezone
 from django.db import transaction
 
 import pandas as pd
-import numpy as np
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Company, DataSource, EmissionRecord, AuditLog
-from .serializers import EmissionRecordSerializer
+
+
+# -----------------------------
+# HEALTH CHECK (IMPORTANT FOR CHOREO)
+# -----------------------------
+@api_view(["GET"])
+def health(request):
+    return Response({
+        "status": "ok",
+        "service": "ingestion"
+    })
 
 
 # -----------------------------
@@ -39,6 +48,9 @@ def normalize_unit(quantity, unit):
 # SCOPE MAPPING
 # -----------------------------
 def get_scope(source_type):
+    if not source_type:
+        return "SCOPE_3"
+
     return {
         "SAP": "SCOPE_1",
         "UTILITY": "SCOPE_2",
@@ -58,64 +70,43 @@ EMISSION_FACTORS = {
 
 
 def calculate_emissions(activity, quantity):
-    factor = EMISSION_FACTORS.get(str(activity).lower(), 0)
-    return factor, quantity * factor
-
-
-# -----------------------------
-# SUSPICIOUS DETECTION
-# -----------------------------
-def detect_suspicious(source_type, quantity, activity):
     try:
-        if quantity is None or np.isnan(quantity):
-            return True
-        if quantity < 0:
-            return True
-        if pd.isna(activity):
-            return True
-
-        if source_type == "UTILITY" and quantity > 100000:
-            return True
-
-        if source_type == "TRAVEL" and quantity > 50000:
-            return True
-
-        return False
-
+        factor = EMISSION_FACTORS.get(str(activity).lower(), 0)
+        return factor, float(quantity) * float(factor)
     except Exception:
-        return True
+        return 0, 0
 
 
 # -----------------------------
-# HEALTH CHECK
-# -----------------------------
-@api_view(["GET"])
-def health(request):
-    return Response({
-        "status": "ok",
-        "message": "API running"
-    })
-
-
-# -----------------------------
-# GET RECORDS
+# GET RECORDS (ADMIN TABLE SAFE)
 # -----------------------------
 @api_view(["GET"])
 def get_records(request):
     try:
-        records = EmissionRecord.objects.select_related(
-            "company", "source"
-        ).all().order_by("-created_at")
+        records = EmissionRecord.objects.all().order_by("-id")
 
-        serializer = EmissionRecordSerializer(records, many=True)
-        return Response(serializer.data)
+        data = []
+        for r in records:
+            data.append({
+                "id": r.id,
+                "activity_type": r.activity_type,
+                "scope": r.scope,
+                "quantity": r.quantity,
+                "unit": r.unit,
+                "normalized_quantity": r.normalized_quantity,
+                "normalized_unit": r.normalized_unit,
+                "status": r.status,
+                "suspicious": r.suspicious,
+            })
+
+        return Response(data)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
 
 # -----------------------------
-# DASHBOARD
+# DASHBOARD SUMMARY
 # -----------------------------
 @api_view(["GET"])
 def dashboard_summary(request):
@@ -164,19 +155,13 @@ def upload_csv(request):
         with transaction.atomic():
             for i, row in df.iterrows():
                 try:
-                    quantity = row.get("Quantity", 0)
-
-                    try:
-                        quantity = float(quantity)
-                    except:
-                        quantity = 0
-
+                    quantity = float(row.get("Quantity", 0) or 0)
                     unit = row.get("Unit", "")
                     activity = row.get("Fuel Type") or row.get("Activity") or "Unknown"
 
                     normalized_q, normalized_u = normalize_unit(quantity, unit)
 
-                    suspicious_flag = detect_suspicious(source_type, quantity, activity)
+                    suspicious_flag = quantity < 0 or quantity > 100000
 
                     factor, emissions = calculate_emissions(activity, normalized_q)
 
@@ -196,7 +181,7 @@ def upload_csv(request):
                         emission_factor=factor,
                         emission_factor_source="DEFRA 2024",
                         calculated_emissions=emissions,
-                        raw_data=row.to_dict(),
+                        raw_data=str(row.to_dict()),
                         suspicious=suspicious_flag,
                         status="PENDING",
                         failure_reason=None
@@ -242,7 +227,6 @@ def update_record_status(request, record_id):
 
     new_status = request.data.get("status")
 
-    old_status = record.status
     record.status = new_status
     record.reviewed_by = request.data.get("reviewer", "admin")
     record.reviewed_at = timezone.now()
@@ -253,7 +237,7 @@ def update_record_status(request, record_id):
         record=record,
         action="UPDATE",
         changed_by=record.reviewed_by,
-        old_value={"status": old_status},
+        old_value={"status": "previous"},
         new_value={"status": new_status},
         comment=record.notes
     )
@@ -262,7 +246,7 @@ def update_record_status(request, record_id):
 
 
 # -----------------------------
-# HTML PAGE
+# UI PAGE
 # -----------------------------
 def upload_page(request):
     return render(request, "ingestion/upload.html")
